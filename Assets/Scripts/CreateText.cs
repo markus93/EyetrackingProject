@@ -54,7 +54,6 @@ public class CreateText : MonoBehaviour
                 {
                     foreach (string word in words)
                     {
-                        Debug.Log("Add new word to list: " + word);
                         resultList.Add(new List<string>() { word });
                     }
                 }
@@ -62,7 +61,6 @@ public class CreateText : MonoBehaviour
                 {
                     for (int i = 0; i < words.Count; i++)
                     {
-                        Debug.Log("Add word to given location: " + words[i] + " i:" + i);
                         resultList[i].Add(words[i]);
                     }
                 }

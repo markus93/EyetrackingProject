@@ -8,15 +8,13 @@ using System.Linq;
 /// Script that handles object swapping and object color changes
 /// 
 /// HOW TO USE:
-/// 1. Add this script to (Empty) GameObject
-/// 2. Add objects to that GameObject as children (Make sure that these objects have collider)
-/// Note when adding 3D TEXT objects - add box collider as component and change size z from 0 to 1. Otherwise Unity can't detect collision properly.
+/// 1. Add your texts to Texts/text1.txt file
 /// </summary>
 public class ChangeWords : MonoBehaviour {
 
 
     private Collider[] _changingObjColliders;
-    private string _lastFocusedName = "";
+    private int _lastFocusedObjID = -1;
     private GameObject _lastFocusedObject = null;
 
     private List<GameObject> _changingObjects = new List<GameObject>();
@@ -30,28 +28,25 @@ public class ChangeWords : MonoBehaviour {
     public bool scrambleLastWord = false; //Scrambles previous word
     public bool scrambleMiddle = true; //Scrambles only middle of the word (leaves 1st and last character in place)
 
+    //Word position and prefab
+    public float borderSizeSides = 2f;
+    public float borderSizeUpper = 2f; 
+    public float spaceSize = 0.8f;
+    public float spaceBetweenLines = 0.5f;
+    public GameObject textPrefab = null;
+
     private Ray _ray;
     private RaycastHit _rayHit;
 
 	//Init 
 	void Start()
 	{
-        //TODO gets all objects with collider in children. (May use also TAG)
-		_changingObjColliders = GetComponentsInChildren<Collider>();
-
-
-		//Populate Changing gameobjects list.
-		for (int i = 0; i < _changingObjColliders.Length; i++) 
-		{
-            Debug.Log("Changing object " + _changingObjColliders[i].name);
-			_changingObjects.Add (_changingObjColliders [i].gameObject);
-		}
-
-		Debug.Log (_changingObjColliders.Length + " changing objects found.");
 
         CreateText createTextScript = gameObject.GetComponent<CreateText>();
-
         words = createTextScript.WordsInText;
+
+        _changingObjects = InitText(words);
+        
     }
 
 
@@ -81,6 +76,53 @@ public class ChangeWords : MonoBehaviour {
         }
     }
 
+    //Instantiates words of text as separate game objects
+    private List<GameObject> InitText(List<List<string>> words)
+    {
+        List<GameObject> objectList = new List<GameObject>();
+
+        Vector3 startWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(0,Screen.height,15f)); //Get world point of upper left corner of screen
+        Vector3 startPos = new Vector3(startWorldPos.x + borderSizeSides, startWorldPos.y - borderSizeUpper, 0);
+        Vector3 nextPos = startPos;
+
+        //Init each word as game object
+        foreach (var word in words)
+        {
+            GameObject gm = Instantiate(textPrefab); //Create new text object
+            gm.GetComponent<TextMesh>().text = word[0];
+            BoxCollider boxc = gm.AddComponent<BoxCollider>(); //Add box collider to gameObject
+
+            //Get word length and height
+            float wordLength = boxc.size.x;
+            float wordHeight = boxc.size.y;
+            boxc.size = new Vector3(wordLength, wordHeight, 1); //Change size.z of boxCollider
+
+            //Get word end point with and without border
+            Vector3 wordEndPos = new Vector3(nextPos.x + wordLength + spaceSize, nextPos.y, 0);
+            Vector3 wordEndWithBorder = wordEndPos;
+            wordEndWithBorder.x = wordEndWithBorder.x + borderSizeSides;
+            Vector3 screenPoint = Camera.main.WorldToScreenPoint(wordEndWithBorder); //Screen position of word ending + space and border
+
+            Debug.Log(screenPoint + " word " + word[0]);
+
+            if (screenPoint.x < Screen.width) //inside of screen
+            {
+                gm.transform.position = nextPos;
+                nextPos = wordEndPos;
+            }
+            else //outside of screen - in this case add object to next row
+            {
+                nextPos = new Vector3(startPos.x, nextPos.y - wordHeight - spaceBetweenLines, 0);
+                gm.transform.position = nextPos;
+                nextPos = new Vector3(nextPos.x + wordLength + spaceSize, nextPos.y, 0);
+            }
+
+            objectList.Add(gm);
+        }
+
+        return objectList;
+    }
+
     //Check whether any changing object is hit by ray.
     private void CastRay(Ray ray)
     {
@@ -102,7 +144,7 @@ public class ChangeWords : MonoBehaviour {
             }
 
             //Change objects if last focused object is not same
-            if (!_lastFocusedName.Equals(gazeObject.name)) //TODO Change to ID 
+            if (!_lastFocusedObjID.Equals(gazeObject.GetInstanceID()))
             {
 
                 int randomIndex = Random.Range(0, words[index].Count);
@@ -148,7 +190,7 @@ public class ChangeWords : MonoBehaviour {
                 }
 
 
-                _lastFocusedName = gazeObject.name;
+                _lastFocusedObjID = gazeObject.GetInstanceID();
                 _lastFocusedObject = gazeObject;
 
             }
