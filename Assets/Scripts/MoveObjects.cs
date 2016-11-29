@@ -4,6 +4,7 @@ using System.Collections;
 using Tobii.EyeTracking;
 
 public class MoveObjects : MonoBehaviour {
+    public GameObject explosion;
     public GameObject gazeAwareObject;
     public GameObject gazePointTracker;
     public Camera myCamera;
@@ -13,7 +14,7 @@ public class MoveObjects : MonoBehaviour {
 
     private int focusTime = 0;
     private int delayFrames = 0;
-    public int speed = 3;
+    //public int speed = 3;
 
     private GazePoint lastGazePoint = GazePoint.Invalid;
 
@@ -22,16 +23,37 @@ public class MoveObjects : MonoBehaviour {
     void Start () {
         gazeAwareObject = GameObject.FindWithTag("gazeaware");
         gazePointTracker = GameObject.FindWithTag("gazepoint");
+        explosion = GameObject.FindWithTag("explosion");
+        explosion.SetActive(false);
         myCamera = GameObject.FindWithTag("MainCamera").GetComponent<Camera>();
         EyeTracking.SetCurrentUserViewPointCamera(myCamera);
         origPos = gazeAwareObject.transform.position;
         orgColor = gazeAwareObject.GetComponent<Renderer>().material.color;
         Debug.Log("Gaze aware object " + gazeAwareObject.name);
         Debug.Log("Tracking point" + gazePointTracker.name);
+
+        Invoke("DoExplosion", 2);
+    }      
+
+
+    void DoExplosion()
+    {
+        explosion.GetComponent<RectTransform>().position = new Vector3(Random.Range(-200, 200), Random.Range(-200, 200), 0);
+        explosion.SetActive(true);
+        Invoke("HideExplosion", 1);
+        //Object newExp = Instantiate(explosion, new Vector3(Random.Range(-1, 5), Random.Range(-1,5), 0), Quaternion.identity);
+        //Destroy(newExp, 5);
+        int delay = Random.Range(2, 6);
+        Debug.Log("Explosion after seconds " + delay);
+        Invoke("DoExplosion", delay);
     }
-	
-	// Update is called once per frame
-	void Update () {
+    void HideExplosion()
+    {
+        explosion.SetActive(false);
+    }
+
+    // Update is called once per frame
+    void Update () {
         GameObject focusedObject = EyeTracking.GetFocusedObject();
         GazePoint gazePoint = EyeTracking.GetGazePoint();
 
@@ -42,9 +64,10 @@ public class MoveObjects : MonoBehaviour {
             Vector3 gazePointInWorld = getPositionInWorld(gazePoint);
             updateTrackerPosition(gazePointInWorld);
             lastGazePoint = gazePoint;
+            float weight = focusedObject.GetComponent<MovableObject>().weight;
             if (null == focusedObject)
             {
-                fall();
+                fall(weight);
                 if (delayFrames > 5)
                 {
                     focusTime = 0;
@@ -61,7 +84,7 @@ public class MoveObjects : MonoBehaviour {
                 gazeAwareObject.GetComponent<Renderer>().material.color = focusColor;
                 focusTime++;
                 Debug.Log("Kept focus for " + focusTime + " frames");
-                move(gazePointInWorld);
+                move(gazePointInWorld, weight);
                 //levitate();
             }
         }
@@ -87,20 +110,20 @@ public class MoveObjects : MonoBehaviour {
         gameObject.transform.position = new Vector3(x, y, gameObject.transform.position.z);
     }
 
-    private void fall()
+    private void fall(float speed)
     {
         if (gazeAwareObject.transform.position.y > origPos.y)
         {
-            gazeAwareObject.transform.Translate(Vector3.down * Time.deltaTime * speed );
+            gazeAwareObject.transform.Translate(Vector3.down * Time.deltaTime * speed * 3 );
         }
     }
 
-    private void levitate()
+    private void levitate(float speed)
     {
-        gazeAwareObject.transform.Translate(Vector3.up * Time.deltaTime * speed * 2);
+        gazeAwareObject.transform.Translate(Vector3.up * Time.deltaTime * speed);
     }
 
-    private void move(Vector2 moveTo)
+    private void move(Vector2 moveTo, float speed)
        
     {
         Transform transform = gazeAwareObject.transform;
