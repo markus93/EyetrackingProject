@@ -13,7 +13,7 @@ using System.Linq;
 public class ChangeWords : MonoBehaviour {
 
 
-    private Collider[] _changingObjColliders;
+    private List<BoxCollider> _changingObjColliders;
     private int _lastFocusedObjID = -1;
     private GameObject _lastFocusedObject = null;
 
@@ -43,9 +43,13 @@ public class ChangeWords : MonoBehaviour {
 	{
 
         CreateText createTextScript = gameObject.GetComponent<CreateText>();
+        HandleColliders drawRectScript = gameObject.GetComponent<HandleColliders>();
         words = createTextScript.WordsInText;
 
-        _changingObjects = InitText(words);
+        InitText(words);
+
+        drawRectScript.setColliders(_changingObjColliders);
+        
         
     }
 
@@ -77,9 +81,11 @@ public class ChangeWords : MonoBehaviour {
     }
 
     //Instantiates words of text as separate game objects
-    private List<GameObject> InitText(List<List<string>> words)
+    private void InitText(List<List<string>> words)
     {
         List<GameObject> objectList = new List<GameObject>();
+        List<BoxCollider> colliderList = new List<BoxCollider>();
+
 
         Vector3 startWorldPos = Camera.main.ScreenToWorldPoint(new Vector3(0,Screen.height,15f)); //Get world point of upper left corner of screen
         Vector3 startPos = new Vector3(startWorldPos.x + borderSizeSides, startWorldPos.y - borderSizeUpper, 0);
@@ -118,9 +124,12 @@ public class ChangeWords : MonoBehaviour {
             }
 
             objectList.Add(gm);
+            colliderList.Add(boxc);
         }
 
-        return objectList;
+        //Add new lists to class variables
+        _changingObjects = objectList;
+        _changingObjColliders = colliderList;
     }
 
     //Check whether any changing object is hit by ray.
