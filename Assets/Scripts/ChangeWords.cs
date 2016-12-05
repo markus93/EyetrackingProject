@@ -8,7 +8,7 @@ using System.Linq;
 /// Script that handles object swapping and object color changes
 /// 
 /// HOW TO USE:
-/// 1. Add your texts to Texts/text1.txt file
+/// 1. Via unity editor, click gameObject "Scripts" and type texts path (e.g "Texts/text1.txt")
 /// </summary>
 public class ChangeWords : MonoBehaviour {
 
@@ -22,9 +22,11 @@ public class ChangeWords : MonoBehaviour {
 
 
     public bool mouseInput = false; //Recognises also mouse cursor position
-    public bool changeGazeWord = true; //Change word with another word from list
+    public bool changeWordToInitial = false; //changes word back to initial text, 
+    //meaning that when we read in the text, we don't read words only from first text, but from every other text except first one 
+    public bool changeWord = true; //Change word with another word from list
     public bool changeLastWord = false; //Change previous word with another word
-    public bool scrambleGazeWord = false; //Scrambles the word you are looking at
+    public bool scrambleWord = false; //Scrambles the word you are looking at
     public bool scrambleLastWord = false; //Scrambles previous word
     public bool scrambleMiddle = true; //Scrambles only middle of the word (leaves 1st and last character in place)
 
@@ -41,16 +43,13 @@ public class ChangeWords : MonoBehaviour {
 	//Init 
 	void Start()
 	{
-
         CreateText createTextScript = gameObject.GetComponent<CreateText>();
-        HandleColliders drawRectScript = gameObject.GetComponent<HandleColliders>();
+        HandleColliders handleCollidersScript = gameObject.GetComponent<HandleColliders>();
         words = createTextScript.WordsInText;
 
         InitText(words);
 
-        drawRectScript.setColliders(_changingObjColliders);
-        
-        
+        handleCollidersScript.setColliders(_changingObjColliders);
     }
 
 
@@ -63,12 +62,7 @@ public class ChangeWords : MonoBehaviour {
 
         if (EyeTracking.GetGazePoint().IsValid)
         {
-            //Vector2 roundedSampleInput = new Vector2(Mathf.RoundToInt(gazePosition.x), Mathf.RoundToInt(gazePosition.y));
-            //Debug.Log(roundedSampleInput);
-            //Debug.Log(Input.mousePosition.ToString());
-
             _ray = Camera.main.ScreenPointToRay(gazePosition);
-
             CastRay(_ray);
         //Mouse input
         }else if (mouseInput)
@@ -91,11 +85,20 @@ public class ChangeWords : MonoBehaviour {
         Vector3 startPos = new Vector3(startWorldPos.x + borderSizeSides, startWorldPos.y - borderSizeUpper, 0);
         Vector3 nextPos = startPos;
 
+        int wordIndex = 0; //from which text word is read
+
         //Init each word as game object
         foreach (var word in words)
         {
+            //Scramble initial text, so it won't contain any words from first text (usually contains only first text)
+            if(changeWordToInitial)
+            {
+                wordIndex = Random.Range(1, word.Count);
+            }
+
+
             GameObject gm = Instantiate(textPrefab); //Create new text object
-            gm.GetComponent<TextMesh>().text = word[0];
+            gm.GetComponent<TextMesh>().text = word[wordIndex];
             BoxCollider boxc = gm.AddComponent<BoxCollider>(); //Add box collider to gameObject
 
             //Get word length and height
@@ -109,7 +112,7 @@ public class ChangeWords : MonoBehaviour {
             wordEndWithBorder.x = wordEndWithBorder.x + borderSizeSides;
             Vector3 screenPoint = Camera.main.WorldToScreenPoint(wordEndWithBorder); //Screen position of word ending + space and border
 
-            Debug.Log(screenPoint + " word " + word[0]);
+            //Debug.Log(screenPoint + " word " + word[0]);
 
             if (screenPoint.x < Screen.width) //inside of screen
             {
@@ -135,7 +138,7 @@ public class ChangeWords : MonoBehaviour {
     //Check whether any changing object is hit by ray.
     private void CastRay(Ray ray)
     {
-        if ((changeGazeWord || changeLastWord || scrambleGazeWord || scrambleLastWord) && Physics.Raycast(ray, out _rayHit))
+        if ((changeWordToInitial || changeWord || changeLastWord || scrambleWord || scrambleLastWord) && Physics.Raycast(ray, out _rayHit))
         {
 
             GameObject gazeObject = _rayHit.transform.gameObject;
@@ -156,17 +159,22 @@ public class ChangeWords : MonoBehaviour {
             if (!_lastFocusedObjID.Equals(gazeObject.GetInstanceID()))
             {
 
-                int randomIndex = Random.Range(0, words[index].Count);
+                int randomIndex = Random.Range(0, words[index].Count); //used to choose randomly another word
                 TextMesh textMesh = _changingObjects[index].GetComponent<TextMesh>();
                 string word = textMesh.text;
 
                 //Change word with word in list
-                if(changeGazeWord || changeLastWord)
+                if(changeWord || changeWordToInitial || changeLastWord)
                 {
                     int wordIndex = words[index].IndexOf(word);
 
+                    // change back to word from initial text
+                    if( changeWordToInitial)
+                    {
+                        randomIndex = 0;
+                    }
                     //If same word is randomly chosen, then select next word
-                    if (randomIndex == wordIndex)
+                    else if (randomIndex == wordIndex)
                     {
                         randomIndex = (wordIndex + 1) % words[index].Count;
                     }
@@ -177,7 +185,7 @@ public class ChangeWords : MonoBehaviour {
                     textMesh.text = newWord;
 
                 } //Scramble word
-                else if(scrambleGazeWord || scrambleLastWord)
+                else if(scrambleWord || scrambleLastWord)
                 {
                     string shuffled;
 

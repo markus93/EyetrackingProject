@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 
 
@@ -12,6 +11,7 @@ public class HandleColliders:MonoBehaviour
     private List<BoxCollider> colliders;
     private List<Rect> colliderRects;
     private bool isHighlightedColliders = false;
+    private CommonVariables com = null;
 
     void Start()
     {
@@ -23,17 +23,25 @@ public class HandleColliders:MonoBehaviour
         if(Input.GetKeyDown(KeyCode.C))
         {
             isHighlightedColliders = !isHighlightedColliders;
-            Debug.Log("Highlighted: " + isHighlightedColliders);
+            //Debug.Log("Highlighted: " + isHighlightedColliders);
         }
         else if(Input.GetKeyDown(KeyCode.UpArrow))
         {
             //Move collider up
             MoveCollider(0.1f);
+            if (com)
+            {
+                com.ColliderAdjustment += 0.1f;
+            }
         }
         else if (Input.GetKeyDown(KeyCode.DownArrow))
         {
             //Move colliders down
             MoveCollider(-0.1f);
+            if (com)
+            {
+                com.ColliderAdjustment -= 0.1f;
+            }
         }
     }
 
@@ -61,14 +69,21 @@ public class HandleColliders:MonoBehaviour
             Vector3 posOnScreen = Camera.main.WorldToScreenPoint(col.transform.position);
             Vector3 widthPos = Camera.main.WorldToScreenPoint(new Vector3(pos.x + col.size.x, pos.y, pos.z)) - posOnScreen;
             Vector3 heightPos = Camera.main.WorldToScreenPoint(new Vector3(pos.x, pos.y + col.size.y, pos.z)) - posOnScreen;
-            Debug.Log("Width-height pos: " + widthPos + " " + heightPos);
             float width = widthPos.x;
             float height = heightPos.y;
-            Debug.Log("Pos: " + posOnScreen);
-            Debug.Log("Size: " + width + " " + height);
 
             colliderRects.Add(new Rect(posOnScreen.x, Screen.height - posOnScreen.y, width, height));
 
+        }
+
+        //If scriptsDontDestroy found, move colliders to right place
+        GameObject gameObj = GameObject.Find("ScriptsDontDestroy"); //Change that to more viable solution?
+        if (gameObj)
+        {
+            com = gameObj.GetComponent<CommonVariables>();
+
+            Debug.Log("CommonVariables:" + com.name + " " + com.ColliderAdjustment);
+            MoveCollider(com.ColliderAdjustment);
         }
     }
 

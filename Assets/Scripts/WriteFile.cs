@@ -24,8 +24,8 @@ public class WriteFile : MonoBehaviour {
             //var sr = File.CreateText(fileName);
             //sr.Close();
         }
-        //Every 10ms write line to file
-        InvokeRepeating("WriteLineToFile", 0f, 0.01f);
+        //Every 20ms write line to file (50Hz)
+        InvokeRepeating("WriteLineToFile", 0f, 0.02f);
 	}
 	
 	// Update is called once per frame
@@ -33,8 +33,10 @@ public class WriteFile : MonoBehaviour {
         using (StreamWriter sw = new StreamWriter(fileName, true))
         {
             Vector2 gazePoint = EyeTracking.GetGazePoint().Screen;
+            Vector2 roundedSampleInput = new Vector2(Mathf.RoundToInt(gazePoint.x), Mathf.RoundToInt(gazePoint.y));
+            string time = DateTime.Now.ToString("HH_mm_ss__fff-dd-MM-yyyy");
             // Add line to file
-            sw.WriteLine(DateTime.Now.ToString("HH_mm_ss__fff-dd-MM-yyyy") + "," + gazePoint.x + "," + gazePoint.y );
+            sw.WriteLine(time + "," + roundedSampleInput.x + "," + roundedSampleInput.y );
         }
-    }
+    } 
 }
