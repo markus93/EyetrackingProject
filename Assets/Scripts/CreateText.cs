@@ -31,11 +31,13 @@ public class CreateText : MonoBehaviour
             List<string> texts = content.Split('-').ToList(); //Split into subtexts, separated by "-"
 
             bool isFirstText = true;
-            
-            foreach (var text in texts)
+
+            foreach (string text in texts)
             {
                 //Split into lines ("\r\n")
-                List<string> lines = Regex.Split(text, "\r\n").ToList();
+                string textTemp = text.Replace("\r\n", "\n");
+                textTemp = textTemp.Replace("\r", "\n");
+                List<string> lines = Regex.Split(textTemp, "\n").ToList();
 
 
                 List<string> words = new List<string>();
@@ -52,7 +54,7 @@ public class CreateText : MonoBehaviour
                         words.AddRange(line.Split().ToList());
                     }
                 }
-                    
+
                 //Fill list of lists with words - 0: contains first words of each text, 1: second and so on 
                 if (isFirstText)
                 {
@@ -65,7 +67,7 @@ public class CreateText : MonoBehaviour
                 {
                     for (int i = 0; i < words.Count; i++)
                     {
-                        if(resultList.Count > i)
+                        if (resultList.Count > i)
                         {
                             resultList[i].Add(words[i]);
                         }
@@ -75,7 +77,7 @@ public class CreateText : MonoBehaviour
                         }
                     }
                 }
-                    
+
                 //Second time we want to append already initialized lists.
                 isFirstText = false;
 

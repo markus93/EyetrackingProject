@@ -49,19 +49,23 @@ public class MoveObjects : MonoBehaviour {
 
     void DoExplosion()
     {
-        int x = Random.Range(-200, 200);
-        int y = Random.Range(-200, 200);
+        int x = Random.Range(0, 500);
+        int y = Random.Range(0, 500);
         logger.WriteLineToFile("EXPLOSION, " + x + "," + y);
         explosion.GetComponent<RectTransform>().position = new Vector3(x,y, 0);
-        explosion.SetActive(true);
+        Image img = explosion.GetComponent<Image>();
+        img.enabled = true;
+        //explosion.SetActive(true);
         Invoke("HideExplosion", 1);
-        int delay = Random.Range(2, 6);
+        int delay = Random.Range(1, 3);
         Debug.Log("Explosion after seconds " + delay);
         Invoke("DoExplosion", delay);
     }
     void HideExplosion()
     {
-        explosion.SetActive(false);
+        Image img = explosion.GetComponent<Image>();
+        img.enabled = false;
+        //explosion.SetActive(false);
     }
 
     // Update is called once per frame
@@ -72,7 +76,7 @@ public class MoveObjects : MonoBehaviour {
         }
         else
         {
-            System.Collections.Generic.IEnumerable<GazePoint> pointsSinceLastHandled = _gazePointProvider.GetDataPointsSince(_lastHandledPoint);
+            /*System.Collections.Generic.IEnumerable<GazePoint> pointsSinceLastHandled = _gazePointProvider.GetDataPointsSince(_lastHandledPoint);
             Vector2 sum = Vector2.zero;
             int count = 0;
             foreach (GazePoint point in pointsSinceLastHandled)
@@ -84,7 +88,7 @@ public class MoveObjects : MonoBehaviour {
                     _lastHandledPoint = point;
                 }
             }
-            Vector2 cent = sum / count;
+            Vector2 cent = sum / count;*/
 
             GazePoint gazePoint = EyeTracking.GetGazePoint();
             if (gazePoint.SequentialId > lastGazePoint.SequentialId && gazePoint.IsWithinScreenBounds)
