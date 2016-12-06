@@ -18,12 +18,8 @@ public class WriteFile : MonoBehaviour {
             Directory.CreateDirectory(filePath);
         }
 
-        fileName = filePath + "/Test" + DateTime.Now.ToString("HH_mm_ss-dd-MM-yyyy") + ".txt";
-        if (!File.Exists(fileName))
-        {
-            //var sr = File.CreateText(fileName);
-            //sr.Close();
-        }
+        fileName = filePath + "/Test" + DateTime.Now.ToString("yyyy-MM-dd-HH_mm_ss") + ".txt";
+
         //Every 20ms write line to file (50Hz)
         InvokeRepeating("WriteLineToFile", 0f, 0.02f);
 	}
@@ -32,11 +28,20 @@ public class WriteFile : MonoBehaviour {
 	void WriteLineToFile () {
         using (StreamWriter sw = new StreamWriter(fileName, true))
         {
+            //Only log if eyetracker active, meaning screen values are not NaN
             Vector2 gazePoint = EyeTracking.GetGazePoint().Screen;
-            Vector2 roundedSampleInput = new Vector2(Mathf.RoundToInt(gazePoint.x), Mathf.RoundToInt(gazePoint.y));
-            string time = DateTime.Now.ToString("HH_mm_ss__fff-dd-MM-yyyy");
-            // Add line to file
-            sw.WriteLine(time + "," + roundedSampleInput.x + "," + roundedSampleInput.y );
+            if (!gazePoint.x.Equals(float.NaN))
+            {
+                Debug.Log("New line to text" + " " + gazePoint.x);
+                Vector2 roundedSampleInput = new Vector2(Mathf.RoundToInt(gazePoint.x), Mathf.RoundToInt(gazePoint.y));
+                string time = DateTime.Now.ToString("HH_mm_ss__fff-dd-MM-yyyy");
+                // Add line to file
+                sw.WriteLine(time + "," + roundedSampleInput.x + "," + roundedSampleInput.y);
+            }
+            else
+            {
+                //Debug.Log("Eyetracker inactive");
+            }
         }
     } 
 }
