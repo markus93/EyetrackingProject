@@ -32,7 +32,7 @@ public class WriteFile : MonoBehaviour {
             Vector2 gazePoint = EyeTracking.GetGazePoint().Screen;
             if (!gazePoint.x.Equals(float.NaN))
             {
-                Debug.Log("New line to text" + " " + gazePoint.x);
+                //Debug.Log("New line to text" + " " + gazePoint.x);
                 Vector2 roundedSampleInput = new Vector2(Mathf.RoundToInt(gazePoint.x), Mathf.RoundToInt(gazePoint.y));
                 string time = DateTime.Now.ToString("HH_mm_ss__fff-dd-MM-yyyy");
                 // Add line to file

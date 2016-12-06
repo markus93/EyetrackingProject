@@ -37,13 +37,17 @@ public class CreateText : MonoBehaviour
                 //Split into lines ("\r\n")
                 List<string> lines = Regex.Split(text, "\r\n").ToList();
 
+
                 List<string> words = new List<string>();
 
                 // Split all lines of text to words and add them to list
                 foreach (string line in lines)
                 {
+
+
                     if (line != "")
                     {
+                        Debug.Log("Line: " + line);
                         //Split lines into words and add words to list
                         words.AddRange(line.Split().ToList());
                     }
@@ -61,7 +65,14 @@ public class CreateText : MonoBehaviour
                 {
                     for (int i = 0; i < words.Count; i++)
                     {
-                        resultList[i].Add(words[i]);
+                        if(resultList.Count > i)
+                        {
+                            resultList[i].Add(words[i]);
+                        }
+                        else
+                        {
+                            Debug.Log("Word out of index: " + words[i]);
+                        }
                     }
                 }
                     
