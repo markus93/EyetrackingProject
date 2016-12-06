@@ -43,5 +43,15 @@ public class WriteFile : MonoBehaviour {
                 //Debug.Log("Eyetracker inactive");
             }
         }
-    } 
+    }
+
+
+    public void WriteLineToFile(String line)
+    {
+        using (StreamWriter sw = new StreamWriter(fileName, true))
+        {
+            string time = DateTime.Now.ToString("HH_mm_ss__fff-dd-MM-yyyy");
+            sw.WriteLine(time + "," + line);
+        }
+    }
 }
