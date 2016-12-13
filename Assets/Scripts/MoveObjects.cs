@@ -11,6 +11,10 @@ public class MoveObjects : MonoBehaviour {
     public bool isMouseInput = true;
     public bool resetOnHitObstacle = true;
     public bool debugEnabled = false;
+    public int distractorMinDistance = 0;
+    public int distractorMaxDistance = 300;
+    public int distractorShowTime = 2;
+    public float normalizeMagnitude = 0.5f;
 
     public GameObject gazeawareObject;
     public GameObject[] images;
@@ -18,11 +22,6 @@ public class MoveObjects : MonoBehaviour {
     public GameObject[] distractorSpawns;
     public GameObject canvas;
     public Text timer;
-
-    public int distractorMinDistance = 0;
-    public int distractorMaxDistance = 300;
-    public int distractorShowTime = 2;
-
     public GameObject gazePointTracker;
     public Camera myCamera;
 
@@ -33,6 +32,7 @@ public class MoveObjects : MonoBehaviour {
     private ITimestamped _lastHandledPoint;
     private Color focusColor = Color.blue;
     private GazePoint lastGazePoint = GazePoint.Invalid;
+    private Vector3 lastGazePointLoc;
 
     private bool started;
     private bool ended;
@@ -52,12 +52,7 @@ public class MoveObjects : MonoBehaviour {
         EyeTracking.SetCurrentUserViewPointCamera(myCamera);
         logger.contWrite = false;
 
-
-        //foreach (GameObject obj in gazeawareObjects)
-        //{
-        //Debug.Log("Gaze aware objects " + obj.name);
-        //}
-        //Debug.Log("Tracking point" + gazePointTracker.name);
+        Debug.Log("Gaze aware object " + gazeawareObject.name);
     }      
 
     // Update is called once per frame
@@ -72,42 +67,41 @@ public class MoveObjects : MonoBehaviour {
         }
         else
         {
-            /*System.Collections.Generic.IEnumerable<GazePoint> pointsSinceLastHandled = _gazePointProvider.GetDataPointsSince(_lastHandledPoint);
-            Vector2 sum = Vector2.zero;
-            int count = 0;
-            foreach (GazePoint point in pointsSinceLastHandled)
-            {
-                count++;
-                sum += point.Screen;
-                if (point == pointsSinceLastHandled.Last())
-                {
-                    _lastHandledPoint = point;
-                }
-            }
-            Vector2 cent = sum / count;*/
-
             GazePoint gazePoint = EyeTracking.GetGazePoint();
             if (gazePoint.SequentialId > lastGazePoint.SequentialId && gazePoint.IsWithinScreenBounds)
             {
                 GameObject focusedObject = EyeTracking.GetFocusedObject();
-                //Vector3 gazePointInWorld = getPositionInWorld(cent);
                 Vector3 gazePointInWorld = getPositionInWorld(gazePoint.Screen);
-                updateTrackerPosition(gazePointInWorld);
-                lastGazePoint = gazePoint;
-                fall();                
-                if(focusedObject != null)
+                Vector3 normalized = gazePointInWorld; 
+                if (focusedObject != null)
                 {
-                    gazeawareFocused(gazePointInWorld, focusedObject);
+                    normalized = normalize(gazePointInWorld, this.lastGazePointLoc);
+                    gazeawareFocused(normalized, focusedObject);
+                    this.lastGazePointLoc = normalized;
+                } else
+                {
+                    fall();
                 }
-            }
+                updateTrackerPosition(normalized);
+                this.lastGazePoint = gazePoint;
+            } 
         }
-
         if (this.started)
         {
             updateTimer();
         }
     }
    
+
+    private Vector3 normalize(Vector3 newPoint, Vector3 lastPoint)
+    {
+        if(lastPoint == null)
+        {
+            return newPoint;
+        }
+        float dist = Vector3.Distance(newPoint, lastPoint);
+        return Vector3.MoveTowards(newPoint, lastPoint, dist * this.normalizeMagnitude);
+    }
 
     private void readMouseInput()
     {       
@@ -235,9 +229,10 @@ public class MoveObjects : MonoBehaviour {
 
     void ShowDistractor(string type, GameObject[] distractors, Vector3 location)
     {
-        Vector2 screenPosition = getPositionInWorld(location);
-        int x = UnityEngine.Random.Range(this.distractorMinDistance, this.distractorMaxDistance);
-        int y = UnityEngine.Random.Range(this.distractorMinDistance, this.distractorMaxDistance);
+        Vector2 screenPosition = getPositionOnScreen(location);
+        int x = UnityEngine.Random.Range(this.distractorMinDistance, this.distractorMaxDistance) * getRandomSign();
+        int y = UnityEngine.Random.Range(this.distractorMinDistance, this.distractorMaxDistance) * getRandomSign();
+        //Debug.Log(x + " " + y);
         GameObject distractor = getRandomEelement(distractors);
         GameObject inst = Instantiate(distractor);
         inst.GetComponent<RectTransform>().position = new Vector3(screenPosition.x + x, screenPosition.y + y, 0);
@@ -269,6 +264,11 @@ public class MoveObjects : MonoBehaviour {
         GameObject go = GameObject.Find("Victory");
         Image img = go.GetComponent<Image>();
         img.enabled = false;
+    }
+
+    private int getRandomSign()
+    {
+        return UnityEngine.Random.value <= .5 ? 1 : -1;
     }
 
     private GameObject getRandomEelement(GameObject[] array)
@@ -360,5 +360,20 @@ public class MoveObjects : MonoBehaviour {
                 gazeawareFocused(_rayHit.point, focusedObject);
             }
         }
+
+            System.Collections.Generic.IEnumerable<GazePoint> pointsSinceLastHandled = _gazePointProvider.GetDataPointsSince(_lastHandledPoint);
+            Vector2 sum = Vector2.zero;
+            int count = 0;
+            foreach (GazePoint point in pointsSinceLastHandled)
+            {
+                count++;
+                sum += point.Screen;
+                if (point == pointsSinceLastHandled.Last())
+                {
+                    _lastHandledPoint = point;
+                }
+            }
+            Vector2 cent = sum / count;
+
          */
 }
