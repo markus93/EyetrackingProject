@@ -7,6 +7,8 @@ using Tobii.EyeTracking;
 //Test writing info to file
 public class WriteFile : MonoBehaviour {
 
+    public bool contWrite = true;
+
     private string filePath = "Info";
     private string fileName;
 
@@ -20,8 +22,11 @@ public class WriteFile : MonoBehaviour {
 
         fileName = filePath + "/Test" + DateTime.Now.ToString("yyyy-MM-dd-HH_mm_ss") + ".txt";
 
-        //Every 20ms write line to file (50Hz)
-        InvokeRepeating("WriteLineToFile", 0f, 0.02f);
+        if (contWrite)
+        {
+            //Every 20ms write line to file (50Hz)
+            InvokeRepeating("WriteLineToFile", 0f, 0.02f);
+        }
 	}
 	
 	// Update is called once per frame

@@ -19,21 +19,21 @@ public class MovableObject : MonoBehaviour {
         orgColor = GetComponent<Renderer>().material.color;
     }
 
-        void OnCollisionEnter(Collision col)
+    void OnCollisionEnter(Collision collision)
     {
-        if (col.gameObject.tag == "Obstacle")
+        string tag = collision.gameObject.tag;
+        if (tag == "Obstacle")
         {
             hitCount++;
-            main.onObstacleHit(this);
-            reset();
-        } else if (col.gameObject.tag == "Finish")
+            main.onObstacleHit(this.gameObject, collision.collider.gameObject);
+        }
+        else if (tag == "Finish")
         {
-            reset();
             main.onFinish(this);
         }
     }
 
-    private void reset()
+    public void reset()
     {
         transform.position = startPos;
         GetComponent<Renderer>().material.color = orgColor;
