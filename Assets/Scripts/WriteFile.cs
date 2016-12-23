@@ -3,6 +3,8 @@ using System.Collections;
 using System;
 using System.IO;
 using Tobii.EyeTracking;
+using UnityEngine.SceneManagement;
+
 
 //Test writing info to file
 public class WriteFile : MonoBehaviour {
@@ -20,7 +22,9 @@ public class WriteFile : MonoBehaviour {
             Directory.CreateDirectory(filePath);
         }
 
-        fileName = filePath + "/Test" + DateTime.Now.ToString("yyyy-MM-dd-HH_mm_ss") + ".txt";
+        string sceneName = SceneManager.GetActiveScene().name;
+
+        fileName = filePath + "/" + sceneName + " " + DateTime.Now.ToString("yyyy-MM-dd-HH_mm_ss") + ".txt";  // Scene name + space + time
 
         if (contWrite)
         {
@@ -35,7 +39,8 @@ public class WriteFile : MonoBehaviour {
         {
             //Only log if eyetracker active, meaning screen values are not NaN
             Vector2 gazePoint = EyeTracking.GetGazePoint().Screen;
-            if (!gazePoint.x.Equals(float.NaN))
+            
+            if (EyeTracking.GetGazePoint().IsValid)  // Do not log NaN values TODO does that also remove negative values?
             {
                 //Debug.Log("New line to text" + " " + gazePoint.x);
                 Vector2 roundedSampleInput = new Vector2(Mathf.RoundToInt(gazePoint.x), Mathf.RoundToInt(gazePoint.y));
