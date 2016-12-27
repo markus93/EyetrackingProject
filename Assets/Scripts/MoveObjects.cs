@@ -184,11 +184,13 @@ public class MoveObjects : MonoBehaviour {
     private void fall()
     {
         MovableObject movable = gazeawareObject.GetComponent<MovableObject>();
-        if (gazeawareObject.transform.position.y > movable.startPos.y)
-        {
-            gazeawareObject.transform.Translate(Vector3.down * Time.deltaTime * movable.weight * 3);
-            gazeawareObject.GetComponent<Renderer>().material.color = movable.orgColor;
-        }
+		Vector3 pos = gazeawareObject.transform.position;
+		if (pos.y > 0.5) {
+			gazeawareObject.transform.Translate (Vector3.down * Time.deltaTime * movable.weight * 3);
+			gazeawareObject.GetComponent<Renderer> ().material.color = movable.orgColor;
+		} else {
+			gazeawareObject.transform.position = new Vector3 (pos.x, 0.5f, pos.z);
+		}
 
         if (this.isFocused)
         {
@@ -203,6 +205,11 @@ public class MoveObjects : MonoBehaviour {
     {
         Transform transform = focusedObject.transform;
         transform.position = Vector3.MoveTowards(transform.position, new Vector3(moveTo.x, moveTo.y, transform.position.z), Time.deltaTime * speed);
+
+		Vector3 pos = gazeawareObject.transform.position;
+		if (pos.y < 0.5) {
+			gazeawareObject.transform.position = new Vector3 (pos.x, 0.5f, pos.z);
+		}
     }
 
 
